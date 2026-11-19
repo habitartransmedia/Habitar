@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Habitar · Quiénes somos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     HABITAR · Quiénes somos — galería coverflow accesible
+     HTML + CSS + JS puro. Sin dependencias.
+     ========================================================= */
+  :root{
+    --morado:#3d348b;
+    --amarillo:#eac435;
+    --naranja:#f35b04;
+    --verde:#03a877;
+    --crema:#FBF7EE;
+    --gris-texto:#3f3f46;
+    --card-w:clamp(240px, 72vw, 320px);
+    --spring:cubic-bezier(.34,1.45,.64,1);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--morado);font-family:'Nunito',system-ui,sans-serif}
+
+  .hab-equipo{
+    background:var(--morado);
+    color:var(--crema);
+    padding:clamp(40px,6vw,72px) 0 clamp(32px,5vw,56px);
+    overflow:hidden;
+    position:relative;
+  }
+  .hab-equipo__titulo{
+    margin:0 0 8px;
+    text-align:center;
+    color:var(--amarillo);
+    font-weight:800;
+    font-size:clamp(34px,5vw,52px);
+    letter-spacing:.01em;
+  }
+  .hab-equipo__contador{
+    margin:0 0 24px;
+    text-align:center;
+    font-size:18px;
+    font-weight:600;
+    color:var(--crema);
+  }
+
+  /* ---------- Escenario coverflow ---------- */
+  .hab-escenario{
+    position:relative;
+    height:360px;
+    perspective:1200px;
+    touch-action:pan-y;
+    user-select:none;
+  }
+  .hab-tarjeta{
+    position:absolute;
+    top:0; left:50%;
+    width:var(--card-w);
+    margin-left:calc(var(--card-w) / -2);
+    padding:28px 24px 26px;
+    background:var(--crema);
+    border-radius:16px; /* rounded-2xl */
+    box-shadow:0 18px 40px rgba(18,12,60,.35), 0 2px 6px rgba(18,12,60,.18);
+    text-align:center;
+    transform-style:preserve-3d;
+    transition:transform .75s var(--spring), opacity .45s ease, filter .45s ease;
+    will-change:transform, opacity;
+    cursor:pointer;
+  }
+  .hab-tarjeta[data-pos="0"]{cursor:default}
+  .hab-foto{
+    width:200px; height:200px;
+    margin:0 auto 20px;
+    border-radius:50%;
+    border:10px solid var(--borde, var(--amarillo));
+    overflow:hidden;
+    background:#fff;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hab-foto img{width:100%;height:100%;object-fit:cover;display:block}
+  .hab-foto svg{width:90px;height:90px}
+  .hab-nombre{
+    margin:0 0 6px;
+    font-size:24px;
+    font-weight:800;
+    color:var(--morado);
+    line-height:1.2;
+  }
+  .hab-rol{
+    margin:0;
+    font-size:17px;
+    font-weight:600;
+    color:var(--gris-texto);
+  }
+
+  /* ---------- Controles ---------- */
+  .hab-controles{
+    display:flex; flex-wrap:wrap;
+    justify-content:center; align-items:center;
+    gap:12px;
+    margin-top:20px;
+    padding:0 16px;
+  }
+  .hab-btn{
+    min-width:48px; min-height:48px;
+    padding:10px 18px;
+    border-radius:999px;
+    border:2px solid var(--crema);
+    background:transparent;
+    color:var(--crema);
+    font:inherit; font-size:16px; font-weight:800;
+    display:inline-flex; align-items:center; gap:8px;
+    cursor:pointer;
+  }
+  .hab-btn:hover{background:rgba(251,247,238,.12)}
+  .hab-btn:disabled{opacity:.45;cursor:not-allowed}
+  .hab-btn--flecha{background:var(--amarillo);border-color:var(--amarillo);color:var(--morado)}
+  .hab-btn--flecha:hover{background:#f2d466}
+  .hab-btn[aria-pressed="false"]{border-style:dashed}
+  .hab-btn:focus-visible,
+  .hab-escenario:focus-visible{
+    outline:4px solid var(--amarillo);
+    outline-offset:4px;
+  }
+  .hab-btn--flecha:focus-visible{outline-color:var(--crema)}
+  .hab-btn svg{width:22px;height:22px;flex:none}
+
+  /* ---------- Recorrido de los personajes ---------- */
+  .hab-recorrido{
+    position:relative;
+    height:150px;
+    margin:28px auto 0;
+    width:min(900px, calc(100% - 32px));
+  }
+  .hab-camino{
+    position:absolute; left:0; right:0; bottom:10px;
+    height:4px;
+    background:repeating-linear-gradient(90deg, var(--crema) 0 18px, transparent 18px 30px);
+    opacity:.7;
+    border-radius:2px;
+  }
+  .hab-hitos{
+    position:absolute; left:0; right:0; bottom:4px;
+    display:flex; justify-content:space-between;
+    padding:0 77px;
+  }
+  .hab-hito{
+    width:16px; height:16px; border-radius:50%;
+    background:var(--morado);
+    border:3px solid var(--crema);
+    transition:background .3s ease, transform .3s ease;
+  }
+  .hab-hito.is-hecho{background:var(--amarillo);border-color:var(--amarillo)}
+  .hab-hito.is-actual{transform:scale(1.35)}
+  .hab-munecos{
+    position:absolute; bottom:14px;
+    left:0;
+    width:170px; height:122px;
+    display:flex; align-items:flex-end; gap:0;
+    transition:left .9s cubic-bezier(.45,.05,.35,1);
+  }
+    /* Dibujo original con el trazo en crema para que se vea sobre el morado */
+  .hab-muneco{
+    width:84px; height:111px;
+    display:block;
+  }
+  .hab-muneco + .hab-muneco{margin-left:2px}
+  .hab-figura{position:relative;width:100%;height:100%}
+  .hab-capa{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .hab-capa--pierna-atras,.hab-capa--pierna-frente{transform-origin:48.1% 54.3%}
+  .hab-capa--brazo{transform-origin:41.3% 30.4%}
+  /* Ciclo de caminata: dos pasos mientras avanzan */
+  .hab-munecos.is-caminando .hab-figura{animation:hab-vaiven .45s ease-in-out 2}
+  .hab-munecos.is-caminando .hab-capa--pierna-atras{animation:hab-pierna-atras .45s ease-in-out 2}
+  .hab-munecos.is-caminando .hab-capa--pierna-frente{animation:hab-pierna-frente .45s ease-in-out 2}
+  .hab-munecos.is-caminando .hab-capa--brazo{animation:hab-brazo .45s ease-in-out 2}
+  .hab-munecos.is-caminando .hab-muneco:nth-child(1) *{animation-delay:.08s}
+  @keyframes hab-pierna-atras{0%,100%{transform:rotate(0)}50%{transform:rotate(-20deg)}}
+  @keyframes hab-pierna-frente{0%,100%{transform:rotate(0)}50%{transform:rotate(17deg)}}
+  @keyframes hab-brazo{0%,100%{transform:rotate(0)}50%{transform:rotate(-24deg)}}
+  @keyframes hab-vaiven{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+  .sr-only{
+    position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+
+  /* ---------- Movimiento reducido ---------- */
+  @media (prefers-reduced-motion: reduce){
+    .hab-tarjeta,.hab-munecos,.hab-hito{transition:none!important}
+    .hab-munecos.is-caminando *{animation:none!important}
+  }
+  .hab-equipo.is-sin-movimiento .hab-tarjeta,
+  .hab-equipo.is-sin-movimiento .hab-munecos,
+  .hab-equipo.is-sin-movimiento .hab-hito{transition:none!important}
+  .hab-equipo.is-sin-movimiento .hab-munecos *{animation:none!important}
+
+  @media (max-width:520px){
+    .hab-escenario{height:330px}
+    .hab-hitos{padding:0 64px}
+    .hab-foto{width:170px;height:170px}
+    .hab-recorrido{height:130px}
+    .hab-munecos{transform:scale(.85);transform-origin:left bottom}
+  }
+</style>
+</head>
+<body>
+
+<section class="hab-equipo" id="quienes-somos"
+         role="region" aria-roledescription="carrusel" aria-labelledby="hab-equipo-titulo">
+  <h2 class="hab-equipo__titulo" id="hab-equipo-titulo">Quiénes somos</h2>
+  <p class="hab-equipo__contador" aria-hidden="true"><span id="hab-contador">1 / 6</span></p>
+
+  <div class="hab-escenario" id="hab-escenario" tabindex="0"
+       aria-label="Galería del equipo. Usa las flechas izquierda y derecha para cambiar de integrante.">
+    <!-- Las tarjetas se generan desde HAB_EQUIPO (abajo) -->
+  </div>
+
+  <div class="hab-controles">
+    <button type="button" class="hab-btn hab-btn--flecha" id="hab-anterior" aria-controls="hab-escenario">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      Anterior
+    </button>
+    <button type="button" class="hab-btn hab-btn--flecha" id="hab-siguiente" aria-controls="hab-escenario">
+      Siguiente
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button type="button" class="hab-btn" id="hab-voz" aria-pressed="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      Voz: <span data-estado>activada</span>
+    </button>
+    <button type="button" class="hab-btn" id="hab-sonido" aria-pressed="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      Pasos: <span data-estado>activados</span>
+    </button>
+  </div>
+
+  <div class="hab-recorrido" aria-hidden="true">
+    <div class="hab-camino"></div>
+    <div class="hab-hitos" id="hab-hitos"></div>
+    <div class="hab-munecos" id="hab-munecos">
+      <div class="hab-muneco"><div class="hab-figura">
+        <img class="hab-capa hab-capa--pierna-atras" src="img/munequito-pierna_atras.png" alt="">
+        <img class="hab-capa hab-capa--brazo" src="img/munequito-brazo.png" alt="">
+        <img class="hab-capa hab-capa--cuerpo" src="img/munequito-cuerpo.png" alt="">
+        <img class="hab-capa hab-capa--pierna-frente" src="img/munequito-pierna_frente.png" alt="">
+      </div></div>
+      <div class="hab-muneco"><div class="hab-figura">
+        <img class="hab-capa hab-capa--pierna-atras" src="img/munequita-pierna_atras.png" alt="">
+        <img class="hab-capa hab-capa--brazo" src="img/munequita-brazo.png" alt="">
+        <img class="hab-capa hab-capa--cuerpo" src="img/munequita-cuerpo.png" alt="">
+        <img class="hab-capa hab-capa--pierna-frente" src="img/munequita-pierna_frente.png" alt="">
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sr-only" id="hab-anuncio" aria-live="polite" aria-atomic="true"></div>
+</section>
+
+<script>
+/* =========================================================
+   DATOS DEL EQUIPO — edita aquí nombres, roles, fotos y
+   la descripción (alt) de cada foto. El orden es el de la galería.
+   ========================================================= */
+const HAB_EQUIPO = [
+  { nombre: 'Nathalia Castro', rol: 'Directora',                  borde: '#eac435', foto: 'img/fotos/nathalia-castro.jpg', alt: 'Nathalia sonríe al aire libre. Tiene el cabello negro, largo y liso, usa gafas de marco negro, un collar brillante y un vestido negro de tiras. Detrás hay un edificio de ladrillo y plantas.' },
+  { nombre: 'Katerine Olaya',  rol: 'Periodista e investigadora', borde: '#f35b04', foto: 'img/fotos/katerine-olaya.jpg', alt: 'Katerine sonríe con la cabeza un poco inclinada. Tiene el cabello castaño, largo y liso, y lleva una blusa satinada color champaña. Detrás hay plantas verdes y luces cálidas.' },
+  { nombre: 'Daniela Rey',     rol: 'Periodista e investigadora', borde: '#03a877', foto: 'img/fotos/daniela-rey.jpg', alt: 'Daniela sonríe frente a una pared de ladrillo rojo. Tiene el cabello negro, largo y liso, y lleva una blusa negra.' },
+  { nombre: 'Andrés Vanegas',  rol: 'Periodista e investigador',  borde: '#eac435', foto: 'img/fotos/andres-vanegas.jpg', alt: 'Andrés mira hacia un lado, al aire libre. Tiene el cabello negro y barba corta, y lleva una camiseta blanca. Detrás hay árboles verdes y montañas.' },
+  { nombre: 'Luna Zárate',     rol: 'Periodista y Redes',         borde: '#f35b04', foto: 'img/fotos/luna-zarate.jpg', alt: 'Luna sonríe suavemente. Tiene el cabello largo y ondulado, castaño con mechas rubias, y lleva un blazer blanco con un collar de flor. De fondo se ven luces de la ciudad de noche.' },
+  { nombre: 'Manuela Romero',  rol: 'Periodista y Redes',         borde: '#03a877', foto: 'img/fotos/manuela-romero.jpg', alt: 'Manuela sonríe con la cabeza un poco inclinada. Tiene el cabello negro, largo y liso, y lleva un suéter blanco de cuello alto. El fondo es oscuro.' }
+];
+
+(function () {
+  const seccion   = document.getElementById('quienes-somos');
+  const escenario = document.getElementById('hab-escenario');
+  const btnAnt    = document.getElementById('hab-anterior');
+  const btnSig    = document.getElementById('hab-siguiente');
+  const btnVoz    = document.getElementById('hab-voz');
+  const btnSonido = document.getElementById('hab-sonido');
+  const contador  = document.getElementById('hab-contador');
+  const anuncio   = document.getElementById('hab-anuncio');
+  const munecos   = document.getElementById('hab-munecos');
+  const hitosBox  = document.getElementById('hab-hitos');
+  const total     = HAB_EQUIPO.length;
+
+  const mqReducido = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let reducido = mqReducido.matches;
+  const aplicarReducido = () => { reducido = mqReducido.matches; seccion.classList.toggle('is-sin-movimiento', reducido); };
+  mqReducido.addEventListener ? mqReducido.addEventListener('change', aplicarReducido) : mqReducido.addListener(aplicarReducido);
+  aplicarReducido();
+
+  let actual = 0;
+  let vozOn = true, sonidoOn = true;
+  let huboInteraccion = false; // los navegadores solo permiten voz y audio tras un gesto
+
+  /* ---------- Construir tarjetas ---------- */
+  const silueta = '<svg viewBox="0 0 80 80" fill="none" stroke="#3d348b" stroke-width="3" stroke-linecap="round" aria-hidden="true"><circle cx="40" cy="30" r="14"/><path d="M14 74 Q14 52 40 52 Q66 52 66 74"/></svg>';
+  const tarjetas = HAB_EQUIPO.map((m, i) => {
+    const art = document.createElement('article');
+    art.className = 'hab-tarjeta';
+    art.setAttribute('role', 'group');
+    art.setAttribute('aria-roledescription', 'diapositiva');
+    art.setAttribute('aria-label', `${i + 1} de ${total}`);
+    art.style.setProperty('--borde', m.borde);
+
+    const foto = document.createElement('div');
+    foto.className = 'hab-foto';
+    if (m.foto) {
+      const img = document.createElement('img');
+      img.src = m.foto;
+      img.alt = m.alt || `Foto de ${m.nombre}`;
+      img.draggable = false;
+      foto.appendChild(img);
+    } else {
+      foto.innerHTML = silueta;
+    }
+    const h3 = document.createElement('h3'); h3.className = 'hab-nombre'; h3.textContent = m.nombre;
+    const p  = document.createElement('p');  p.className  = 'hab-rol';    p.textContent  = m.rol;
+    art.append(foto, h3, p);
+
+    art.addEventListener('click', () => { if (i !== actual) { marcarInteraccion(); ir(i); } });
+    escenario.appendChild(art);
+    return art;
+  });
+
+  const hitos = HAB_EQUIPO.map(() => {
+    const h = document.createElement('span'); h.className = 'hab-hito'; hitosBox.appendChild(h); return h;
+  });
+
+  /* ---------- Layout coverflow ---------- */
+  function layout() {
+    const w = tarjetas[0].offsetWidth;
+    tarjetas.forEach((t, i) => {
+      const d = i - actual, a = Math.abs(d), s = Math.sign(d);
+      let x = 0, esc = 1, rot = 0, op = 1, z = 10;
+      if (a === 1)      { x = s * w * 0.62; esc = 0.8;  rot = -s * 22; op = 0.6;  z = 6; }
+      else if (a === 2) { x = s * w * 1.05; esc = 0.64; rot = -s * 30; op = 0.25; z = 3; }
+      else if (a > 2)   { x = s * w * 1.3;  esc = 0.5;  rot = -s * 34; op = 0;    z = 1; }
+      t.style.transform = `translateX(${x}px) scale(${esc}) rotateY(${rot}deg)`;
+      t.style.opacity = op;
+      t.style.zIndex = z;
+      t.style.filter = a === 0 ? 'none' : 'blur(.5px)';
+      t.style.pointerEvents = a <= 1 ? 'auto' : 'none';
+      t.dataset.pos = d;
+      t.setAttribute('aria-hidden', a === 0 ? 'false' : 'true');
+    });
+  }
+
+  /* ---------- Recorrido de los muñecos ---------- */
+  function moverMunecos(animar) {
+    const caja = munecos.parentElement;
+    const anchoMunecos = munecos.offsetWidth * (window.innerWidth <= 520 ? .85 : 1);
+    const progreso = total > 1 ? actual / (total - 1) : 0;
+    munecos.style.left = ((caja.clientWidth - anchoMunecos) * progreso) + 'px';
+    hitos.forEach((h, i) => { h.classList.toggle('is-hecho', i <= actual); h.classList.toggle('is-actual', i === actual); });
+    if (animar && !reducido) {
+      munecos.classList.remove('is-caminando'); void munecos.offsetWidth; munecos.classList.add('is-caminando');
+      clearTimeout(timerCaminar); timerCaminar = setTimeout(() => munecos.classList.remove('is-caminando'), 1050);
+    }
+  }
+  let timerCaminar = null;
+
+  /* ---------- Sonido de pasos (Web Audio API) ---------- */
+  let ctx = null;
+  function paso(cuando) {
+    const n = Math.floor(ctx.sampleRate * 0.09);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 3);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const filtro = ctx.createBiquadFilter(); filtro.type = 'bandpass'; filtro.frequency.value = 700; filtro.Q.value = 0.9;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.22, cuando); g.gain.exponentialRampToValueAtTime(0.001, cuando + 0.09);
+    src.connect(filtro).connect(g).connect(ctx.destination);
+    src.start(cuando);
+  }
+  function sonarPasos() {
+    if (!sonidoOn || !huboInteraccion) return;
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      const t = ctx.currentTime + 0.02;
+      paso(t); paso(t + 0.32);
+    } catch (e) { /* audio no disponible */ }
+  }
+
+  /* ---------- Voz (speechSynthesis, español latino femenino) ---------- */
+  const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
+  let vozElegida = null;
+  function elegirVoz() {
+    if (!synth) return;
+    const voces = synth.getVoices().filter(v => /^es/i.test(v.lang));
+    if (!voces.length) return;
+    const latam = /es[-_](419|MX|CO|US|AR|CL|PE|VE|EC|UY|PY|BO|CR|PA|DO|GT|HN|NI|SV|PR|CU)/i;
+    const femenina = /paulina|sabina|camila|salome|salomé|dalia|elena|helena|laura|lupe|paloma|sofia|sofía|valentina|ximena|monica|mónica|female|mujer|google español de estados unidos/i;
+    vozElegida =
+      voces.find(v => latam.test(v.lang) && femenina.test(v.name)) ||
+      voces.find(v => latam.test(v.lang)) ||
+      voces.find(v => femenina.test(v.name)) ||
+      voces[0];
+  }
+  if (synth) { elegirVoz(); synth.onvoiceschanged = elegirVoz; }
+
+  function textoDe(i) {
+    const m = HAB_EQUIPO[i];
+    let t = `Diapositiva ${i + 1} de ${total}. ${m.nombre}. Rol: ${m.rol}.`;
+    if (m.foto) t += ` Foto: ${m.alt || 'retrato de ' + m.nombre}.`;
+    return t;
+  }
+  function hablar(i) {
+    if (!synth || !vozOn || !huboInteraccion) return;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(textoDe(i));
+    if (vozElegida) { u.voice = vozElegida; u.lang = vozElegida.lang; } else { u.lang = 'es-419'; }
+    u.rate = 0.95; u.pitch = 1.05;
+    synth.speak(u);
+  }
+
+  /* ---------- Navegación ---------- */
+  function actualizarUI(animar) {
+    layout();
+    moverMunecos(animar);
+    contador.textContent = `${actual + 1} / ${total}`;
+    btnAnt.disabled = actual === 0;
+    btnSig.disabled = actual === total - 1;
+    anuncio.textContent = `Integrante ${actual + 1} de ${total}: ${HAB_EQUIPO[actual].nombre}, ${HAB_EQUIPO[actual].rol}.`;
+  }
+  function ir(i) {
+    const nuevo = Math.max(0, Math.min(total - 1, i));
+    if (nuevo === actual) return;
+    actual = nuevo;
+    actualizarUI(true);
+    sonarPasos();
+    hablar(actual);
+  }
+  function marcarInteraccion() { huboInteraccion = true; }
+
+  btnAnt.addEventListener('click', () => { marcarInteraccion(); ir(actual - 1); });
+  btnSig.addEventListener('click', () => { marcarInteraccion(); ir(actual + 1); });
+
+  // Si el foco cae en un botón que se deshabilita, lo pasamos al otro
+  [btnAnt, btnSig].forEach(b => b.addEventListener('click', () => {
+    if (b.disabled) (b === btnAnt ? btnSig : btnAnt).focus();
+  }));
+
+  seccion.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); marcarInteraccion(); ir(actual - 1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); marcarInteraccion(); ir(actual + 1); }
+    if (e.key === 'Home')       { e.preventDefault(); marcarInteraccion(); ir(0); }
+    if (e.key === 'End')        { e.preventDefault(); marcarInteraccion(); ir(total - 1); }
+  });
+
+  // Arrastre / swipe
+  let xIni = null;
+  escenario.addEventListener('pointerdown', e => { xIni = e.clientX; });
+  escenario.addEventListener('pointerup', e => {
+    if (xIni === null) return;
+    const dx = e.clientX - xIni; xIni = null;
+    if (Math.abs(dx) > 50) { marcarInteraccion(); ir(actual + (dx < 0 ? 1 : -1)); }
+  });
+  escenario.addEventListener('pointercancel', () => { xIni = null; });
+
+  // Scroll horizontal (trackpad / rueda con Shift)
+  let bloqueoRueda = false;
+  escenario.addEventListener('wheel', e => {
+    const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : (e.shiftKey ? e.deltaY : 0);
+    if (Math.abs(dx) < 20) return;
+    e.preventDefault();
+    if (bloqueoRueda) return;
+    bloqueoRueda = true; setTimeout(() => bloqueoRueda = false, 650);
+    marcarInteraccion(); ir(actual + (dx > 0 ? 1 : -1));
+  }, { passive: false });
+
+  // Interruptores de voz y sonido
+  function interruptor(btn, on, si, no) {
+    btn.setAttribute('aria-pressed', String(on));
+    btn.querySelector('[data-estado]').textContent = on ? si : no;
+  }
+  btnVoz.addEventListener('click', () => {
+    marcarInteraccion();
+    vozOn = !vozOn;
+    interruptor(btnVoz, vozOn, 'activada', 'desactivada');
+    if (vozOn) hablar(actual); else if (synth) synth.cancel();
+  });
+  btnSonido.addEventListener('click', () => {
+    marcarInteraccion();
+    sonidoOn = !sonidoOn;
+    interruptor(btnSonido, sonidoOn, 'activados', 'desactivados');
+  });
+
+  window.addEventListener('resize', () => actualizarUI(false));
+  actualizarUI(false);
+})();
+</script>
+</body>
+</html>

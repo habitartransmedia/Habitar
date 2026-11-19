@@ -1,0 +1,38 @@
+HABITAR — Sitio web completo
+================================
+
+Esta carpeta es el sitio entero. No muevas ni cambies el nombre de las carpetas:
+la página busca sus fotos, videos, audios y letras en estas rutas exactas.
+
+  index.html        → la página principal (ábrela desde aquí)
+  fonts/            → tipografías
+  img/              → fotos e ilustraciones
+  video/            → videos
+  audio/            → audio del Podcast de Peter (ver el paso pendiente)
+  sombras/          → recorrido sonoro del restaurante Sombras (con sus 4 entrevistas)
+  quienes-somos/    → galería del equipo
+
+PASO PENDIENTE ANTES DE PUBLICAR
+--------------------------------
+Copia el archivo del Podcast de Peter dentro de la carpeta "audio" con este nombre exacto:
+
+  audio/podcast-peter.mp3
+
+(Pesa más de lo que se podía descargar desde Claude, por eso no viene incluido.)
+
+CÓMO PUBLICARLO GRATIS (la forma más fácil)
+--------------------------------------------
+1. Entra a https://app.netlify.com/drop
+2. Arrastra la carpeta "habitar" completa a la página.
+3. En unos segundos te da un enlace público (algo como https://nombre.netlify.app).
+4. Si creas una cuenta gratuita, puedes cambiar el nombre del enlace o conectar un dominio propio.
+
+Otras opciones gratuitas: GitHub Pages o Vercel (subiendo esta misma carpeta).
+
+IMPORTANTE
+----------
+- Para verla bien hay que publicarla en un servidor (como Netlify). Si solo haces doble clic en
+  index.html, algunas partes (la galería del equipo, el recorrido de Sombras, la voz) pueden no
+  funcionar en algunos navegadores.
+- Los videos de las sillas 3 y 5 se abren en YouTube; necesitan conexión a internet.
+- El enlace de Instagram lleva a instagram.com/habitarcol.
